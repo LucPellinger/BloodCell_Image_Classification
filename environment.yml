@@ -1,0 +1,18 @@
+name: bloodcell-streamlit
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - streamlit
+      - tensorflow
+      - scikit-learn
+      - matplotlib
+      - seaborn
+      - pandas
+      - numpy
+      - pillow
+      - optuna
+      - plotly
