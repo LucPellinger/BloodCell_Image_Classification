@@ -1,5 +1,5 @@
 import tensorflow as tf
-import tensorflow_docs.modeling
+#import tensorflow_docs.modeling
 import matplotlib.pyplot as plt
 from utils.metrics import MulticlassPrecision, MulticlassRecall
 
@@ -67,8 +67,8 @@ def get_callbacks(name):
 
   print("Utilized **get_callbacks**")
   return [
-    tfdocs.modeling.EpochDots(),
-    tf.keras.callbacks.TensorBoard(logdir/name, update_freq="epoch"),
+    #tfdocs.modeling.EpochDots(),
+    tf.keras.callbacks.TensorBoard(log_dir=name, update_freq="epoch"),
   ]
 
 
