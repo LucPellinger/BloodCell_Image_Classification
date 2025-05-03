@@ -1,5 +1,11 @@
 import tensorflow as tf
 import logging
+import sys
+import os
+
+# Add project root to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from utils.preprocessing import load_datasets, plot_dataset_distributions
 from utils.base_model import BaseCNNModel
 from utils.eda import display_class_representatives #checked

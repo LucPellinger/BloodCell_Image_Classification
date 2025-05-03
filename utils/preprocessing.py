@@ -63,6 +63,8 @@ def load_datasets(train_dir="assets/data/dataset2-master/dataset2-master/images/
         label_mode='int'
     )
 
+    AUTOTUNE = tf.data.AUTOTUNE
+
     # Performance boost: cache, shuffle (for training), and prefetch
     train_ds = raw_train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
     val_ds = raw_val_ds.cache().prefetch(buffer_size=AUTOTUNE)

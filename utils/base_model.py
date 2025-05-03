@@ -112,12 +112,17 @@ class BaseModel:
                 ModelCheckpoint(filepath=os.path.join(self.save_dir, 'best_model.h5'), monitor='val_loss', save_best_only=True, verbose=1)
             ]
 
+        tf.summary.trace_on(graph=True, profiler=True)
+
         self.history = self.model.fit(
             train_ds,
             validation_data=val_ds,
             epochs=epochs,
             callbacks=callbacks
         )
+
+        tf.summary.trace_export(name="model_trace", step=0, profiler_outdir=tensorboard_logdir)
+
 
         print("✅ Training complete")
         if plot:

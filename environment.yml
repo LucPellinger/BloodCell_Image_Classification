@@ -15,7 +15,6 @@ dependencies:
   - notebook
   - ipykernel
   - ipywidgets
-  - jupyter_contrib_nbextensions
   - scipy
   - tqdm
   - pip:
