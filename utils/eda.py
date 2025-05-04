@@ -69,6 +69,7 @@ def plot_distribution(distributions, dataset_names):
       ax.set_title(f'{name} Dataset')
       ax.set_xlabel('Classes')
       ax.set_ylabel('Counts')
+      ax.set_xticks(range(len(classes)))  # Set fixed tick positions
       ax.set_xticklabels(classes, rotation=45, ha='right')
 
       # Add annotations to each bar

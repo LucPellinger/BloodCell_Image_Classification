@@ -9,6 +9,9 @@ from tensorflow.keras.utils import plot_model
 from utils.metrics import MulticlassPrecision, MulticlassRecall
 from utils.archive.train_utils import get_callbacks, performance_plot
 from utils.evaluation import performance_Metrics_U_Visualizations
+import logging
+import subprocess
+
 
 
 
@@ -16,18 +19,52 @@ class BaseModel:
     def __init__(self, model_name, num_classes, input_shape):
         self.model_name = model_name
         self.save_dir_base = "assets/models"
-
         self.save_dir = os.path.join(self.save_dir_base, self.model_name)
+
+        # Setup model-specific logger
+        self.logger = logging.getLogger(f"{model_name}_logger")
+        self.logger.setLevel(logging.INFO)
+
+        if not self.logger.handlers:
+            ch = logging.StreamHandler()
+            formatter = logging.Formatter('\033[34;1m%(asctime)s | MODEL | %(message)s\033[0m')
+            ch.setFormatter(formatter)
+            self.logger.addHandler(ch)
+
         if os.path.exists(self.save_dir):
-            print(f"⚠️ Directory {self.save_dir} already exists. Overwriting...")
+            self.logger.warning(f"⚠️ Directory {self.save_dir} already exists. Overwriting...")
         else:
-            print(f"Creating directory {self.save_dir} for saving model and history.")
+            self.logger.info(f"Creating directory {self.save_dir} for saving model and history.")
             os.makedirs(self.save_dir, exist_ok=True)
+
+        self.configure_gpu()
+        self.logger.info("✅ TensorFlow GPU configuration complete.")
 
         self.num_classes = num_classes
         self.input_shape = input_shape
         self.model = None
         self.history = None
+
+    def configure_gpu(self):
+        try:
+            gpus = tf.config.experimental.list_physical_devices('GPU')
+            if gpus:
+                for gpu in gpus:
+                    tf.config.experimental.set_memory_growth(gpu, True)
+                tf.config.set_visible_devices(gpus[0], 'GPU')  # restrict to first GPU
+                self.logger.info(f"Using GPU: {gpus[0].name}")
+            else:
+                self.logger.info("No GPU found. Using CPU.")
+        except RuntimeError as e:
+            self.logger.warning(f"GPU config error: {e}")
+
+    def log_gpu_usage(self):
+        try:
+            output = subprocess.check_output(["nvidia-smi", "--query-gpu=memory.used,memory.total", "--format=csv,nounits,noheader"])
+            used, total = output.decode().strip().split('\n')[0].split(', ')
+            self.logger.info(f"🔍 GPU Memory Usage: {used}MB / {total}MB")
+        except Exception as e:
+            self.logger.warning(f"Could not query GPU usage: {e}")
 
     @staticmethod
     def list_available_pretrained_models():
@@ -43,11 +80,13 @@ class BaseModel:
         for model_name in sorted(available_models):
             print(f" - {model_name}")
 
+        return available_models
+
     def build_pretrained(self, base_model_name,
                          num_dense_layers=1, neurons_dense=512,
                          dropout_rate=None, normalization=False, l2_reg=None,
                          fine_tune_at=None, unfreeze_all=False):
-        print(f"Building model using {base_model_name}")
+        self.logger.info(f"Building model using {base_model_name}")
 
         base_model_fn = getattr(keras.applications, base_model_name, None)
         if base_model_fn is None:
@@ -57,17 +96,19 @@ class BaseModel:
 
         if unfreeze_all:
             base_model.trainable = True
-            print("🔓 Unfreezing all layers for fine-tuning.")
+            self.logger.info("🔓 Unfreezing all layers for fine-tuning.")
         elif fine_tune_at is not None:
             base_model.trainable = True
             for layer in base_model.layers[:fine_tune_at]:
                 layer.trainable = False
-            print(f"🔓 Fine-tuning from layer {fine_tune_at} onwards.")
+            self.logger.info(f"🔓 Fine-tuning from layer {fine_tune_at} onwards.")
         else:
             base_model.trainable = False
-            print("🔒 Freezing all layers in base model.")
+            self.logger.info("🔒 Freezing all layers in base model.")
 
-        model_layers = [base_model, layers.Flatten()]
+        model_layers = [base_model, layers.GlobalAveragePooling2D()] # .Faltten() is old, use GlobalAveragePooling2D for memory efficiency 
+        # more under: https://stackoverflow.com/questions/49295311/what-is-the-difference-between-flatten-and-globalaveragepooling2d-in-keras
+
 
         for _ in range(num_dense_layers):
             model_layers.append(layers.Dense(neurons_dense, activation='relu',
@@ -80,7 +121,8 @@ class BaseModel:
         model_layers.append(layers.Dense(self.num_classes, activation='softmax'))
 
         self.model = Sequential(model_layers)
-        print("✅ Model built successfully")
+        self.logger.info("✅ Model built successfully")
+        self.log_gpu_usage()
 
     def compile(self, optimizer=None, loss='sparse_categorical_crossentropy'):
         if self.model is None:
@@ -98,7 +140,8 @@ class BaseModel:
                 MulticlassRecall(num_classes=self.num_classes)
             ]
         )
-        print("✅ Model compiled")
+        self.logger.info("✅ Model compiled")
+        self.log_gpu_usage()
 
     def train(self, train_ds, val_ds, epochs=10, early_stopping=False, tensorboard_logdir=None, plot=False):
         if self.model is None:
@@ -112,21 +155,23 @@ class BaseModel:
                 ModelCheckpoint(filepath=os.path.join(self.save_dir, 'best_model.h5'), monitor='val_loss', save_best_only=True, verbose=1)
             ]
 
-        tf.summary.trace_on(graph=True, profiler=True)
+        #tf.summary.trace_on(graph=True, profiler=True)
 
         self.history = self.model.fit(
             train_ds,
             validation_data=val_ds,
             epochs=epochs,
-            callbacks=callbacks
+            callbacks=callbacks,
+            #steps_per_epoch=len(train_ds),
         )
 
-        tf.summary.trace_export(name="model_trace", step=0, profiler_outdir=tensorboard_logdir)
+        #tf.summary.trace_export(name="model_trace", step=0, profiler_outdir=tensorboard_logdir)
 
 
-        print("✅ Training complete")
+        self.logger.info("✅ Training complete")
         if plot:
             performance_plot(self.history)
+        self.log_gpu_usage()
 
         return self.history
 
@@ -135,9 +180,10 @@ class BaseModel:
             raise ValueError("Model not built. Call `build()` or `build_pretrained()` first.")
 
         results = self.model.evaluate(test_ds)
-        print("\n🧪 Test results:")
+        self.logger.info("\n🧪 Test results:")
         for name, value in zip(self.model.metrics_names, results):
-            print(f"{name}: {value:.4f}")
+            self.logger.info(f"{name}: {value:.4f}")
+        self.log_gpu_usage()
 
     def evaluate_with_report(self, test_ds, class_names):
         """
@@ -145,7 +191,7 @@ class BaseModel:
         """
         if self.model is None:
             raise ValueError("Model not built. Call `build()` or `build_pretrained()` first.")
-        performance_Metrics_U_Visualizations(self.model, test_ds, class_names)
+        performance_Metrics_U_Visualizations(model=self.model, test_ds=test_ds, class_names=class_names, save_dir=self.save_dir, logger=self.logger)
 
     def save(self):
         model_path = os.path.join(self.save_dir, f"{self.model_name}.keras")
@@ -155,8 +201,8 @@ class BaseModel:
         with open(history_path, 'wb') as f:
             pickle.dump(self.history.history, f)
 
-        print(f"✅ Model saved to {model_path}")
-        print(f"✅ Training history saved to {history_path}")
+        self.logger.info(f"✅ Model saved to {model_path}")
+        self.logger.info(f"✅ Training history saved to {history_path}")
 
     def load_history(self, history_path=None):
         if history_path is None:
@@ -165,15 +211,16 @@ class BaseModel:
         with open(history_path, 'rb') as f:
             self.history = pickle.load(f)
         performance_plot(self.history)
-        print("✅ History loaded and plotted")
+        self.logger.info("✅ History loaded and plotted")
 
     def plot_model_architecture(self):
         png_path = os.path.join(self.save_dir, f"{self.model_name}_summary.png")
         if self.model:
             plot_model(self.model, to_file=png_path, show_shapes=True, show_layer_names=True)
-            print(f"✅ Model plot saved to {png_path}")
+            self.logger.info(f"✅ Model plot saved to {png_path}")
+            self.log_gpu_usage()
         else:
-            print("Model not built yet. Please build the model first.")
+            self.logger.info("Model not built yet. Please build the model first.")
 
 
 class BaseCNNModel(BaseModel):
@@ -184,10 +231,10 @@ class BaseCNNModel(BaseModel):
         if self.model:
             self.model.summary()
         else:
-            print("Model not built yet. Please build the model first.")
+            self.logger.info("Model not built yet. Please build the model first.")
 
     def build(self):
-        print("Building baseline CNN model")
+        self.logger.info("Building baseline CNN model")
         self.model = Sequential([
             layers.Conv2D(32, (3, 3), activation='relu', input_shape=self.input_shape),
             layers.MaxPooling2D((2, 2)),
@@ -199,7 +246,8 @@ class BaseCNNModel(BaseModel):
             layers.Dense(128, activation='relu'),
             layers.Dense(self.num_classes, activation='softmax')
         ])
-        print("✅ Baseline CNN model built successfully")
+        self.logger.info("✅ Baseline CNN model built successfully")
+        self.log_gpu_usage()
 
 
 class BenchmarkKaggleModel(BaseModel):
@@ -207,7 +255,7 @@ class BenchmarkKaggleModel(BaseModel):
         super().__init__(model_name, num_classes, input_shape)
 
     def build(self):
-        print("Building Kaggle benchmark CNN model")
+        self.logger.info("Building Kaggle benchmark CNN model")
         self.model = Sequential([
             layers.Conv2D(128, (8, 8), strides=(3, 3), activation='relu', input_shape=self.input_shape),
             layers.BatchNormalization(),
@@ -247,4 +295,5 @@ class BenchmarkKaggleModel(BaseModel):
             layers.Dropout(0.5),
             layers.Dense(self.num_classes, activation='softmax')
         ])
-        print("✅ Kaggle benchmark CNN model built successfully")
+        self.logger.info("✅ Kaggle benchmark CNN model built successfully")
+        self.log_gpu_usage()

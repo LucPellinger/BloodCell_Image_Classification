@@ -73,7 +73,7 @@ def load_datasets(train_dir="assets/data/dataset2-master/dataset2-master/images/
     return train_ds, val_ds, test_ds, class_names
 
 
-def plot_dataset_distributions(train_ds, val_ds, test_ds, img_height, img_width, class_names):
+def plot_dataset_distributions(train_ds, val_ds, test_ds, img_height, img_width, class_names, save_dir=None):
     """
     Plots the class distributions of the training, validation, and test datasets.
 

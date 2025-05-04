@@ -35,22 +35,56 @@ if gpus:
 else:
     logger.warning("⚠️ No GPU found. Using CPU instead.")
 
+import gc
+from tensorflow.keras import backend as K
+import psutil
+import subprocess
+
+def log_system_memory_usage():
+    mem = psutil.virtual_memory()
+    logger.info(f"🧠 System Memory: {mem.percent}% used ({mem.used / 1e9:.2f} GB / {mem.total / 1e9:.2f} GB)")
+
+def log_gpu_memory_usage():
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=memory.total,memory.used,memory.free", "--format=csv,nounits,noheader"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        for idx, line in enumerate(result.stdout.strip().split('\n')):
+            total, used, free = map(int, line.split(','))
+            logger.info(f"🖥️ GPU {idx}: {used}MB used / {total}MB total ({free}MB free)")
+    except Exception as e:
+        logger.warning(f"Unable to query GPU memory usage: {e}")
+
+
+
+
 logger.info("🔧 Setting up logging...")
 logger.info("Num GPUs Available: %s", len(tf.config.list_physical_devices('GPU')))
 
+# next we will also add a transformer based model called ViT
+
 models = [
 "VGG16",
-#"VGG19",
-#"EfficientNetB0",
-#"DenseNet121",
-#"NASNetMobile",
-#"MobileNetV2",
-#"ResNet101",
-#"ResNet50",
-#"InceptionV3"
+"VGG19",
+"EfficientNetB0",
+"DenseNet121",
+"NASNetMobile",
+"MobileNetV2",
+"ResNet101",
+"ResNet50",
+"InceptionV3"
 ]
 
 for i in models:
+
+    logger.info(f"📊 Monitoring memory before training {i}...")
+    log_system_memory_usage()
+    log_gpu_memory_usage()
+
     logger.info("Available model: %s", i)
 
     # === CONFIGURATION === #
@@ -58,17 +92,13 @@ for i in models:
     IMG_WIDTH = 320
     NUM_CHANNELS = 3
     NUM_CLASSES = 4
-    BATCH_SIZE = 32
+    BATCH_SIZE = 32 # 32
     EPOCHS = 10
     CLASS_NAMES = ["Eosinophil", "Lymphocyte", "Monocyte", "Neutrophil"]
-    log_dir = os.path.join("assets/tf_logs", MODEL_NAME, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     TRAIN_DIR = "assets/data/dataset2-master/dataset2-master/images/TRAIN"
     TEST_DIR = "assets/data/dataset2-master/dataset2-master/images/TEST"
     MODEL_NAME = f"{i}_transfer"
-
-
-
-    
+    log_dir = os.path.join("assets/tf_logs", MODEL_NAME, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 
 
     # === STEP 1: Load Data === #
@@ -98,7 +128,7 @@ for i in models:
         dropout_rate=0.5,
         normalization=True,
         l2_reg=1e-4,
-        fine_tune_at=100  # or set `unfreeze_all=True`
+        #fine_tune_at=100  # or set `unfreeze_all=True`
     )
 
     model.compile()
@@ -110,9 +140,13 @@ for i in models:
         val_ds=val_ds,
         epochs=EPOCHS,
         early_stopping=True,
-        plot=True,
+        plot=False,
         tensorboard_logdir=log_dir
     )
+
+    logger.info(f"📉 Monitoring memory after training {i}...")
+    log_system_memory_usage()
+    log_gpu_memory_usage()    
 
     # === STEP 6: Evaluation === #
     logger.info("📊 Evaluating on test set...")
@@ -124,3 +158,10 @@ for i in models:
     model.save()
 
     logger.info("✅ All steps completed successfully.")
+
+    # === STEP 8: Cleanup === #
+    logger.info("🧹 Clearing model from memory to free up resources...")
+    del model
+    K.clear_session()
+    gc.collect()
+    logger.info("✅ Resources released.\n")
