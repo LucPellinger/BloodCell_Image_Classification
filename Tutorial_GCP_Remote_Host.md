@@ -1,6 +1,6 @@
 # Google Cloud Setup Tutorial
 
-This document works as a quick rundown on how to setup a cloud compute engine as virtual machine on google cloud to use a T4 GPU via a remote host connection in VSCode.
+This document works as a quick tutorial on how to setup a cloud compute engine as virtual machine on google cloud to use a T4 GPU via a remote host connection in VSCode.
 It has the purpose to support the work during machine learning development.
 
 Dependencies:
@@ -203,13 +203,13 @@ ssh -T git@github.com
 git clone <sshurl>
 ```
 
-**6.3.4: Create new conda env and install requirements.txt**
+**6.3.4: Create new conda env and install requirements.txt or conda environment.yml**
 
 ```bash
 conda env list
 conda activate <env_name>
 conda list
-conda install -r requirements.txt
+conda env create -f environment.yml
 ```
 
 **6.3.5: When done working comit all changes, disconnect VSCode and shutdown remote host in GCP Compute Engine.**
