@@ -9,6 +9,7 @@ plotly
 pillow
 
 # Jupyter (optional for notebook debugging)
+notebook
 jupyter
 ipykernel
 
