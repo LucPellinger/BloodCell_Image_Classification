@@ -5,8 +5,8 @@ It has the purpose to support the work during machine learning development.
 
 Dependencies:
 
-<img src="tutorial/projects.png" alt="Alt text" width="300" />
-<img src="tutorial/vscode_icon.png" alt="Alt text" width="47" />
+<img src="GCP_Setup/images/projects.png" alt="Alt text" width="300" />
+<img src="GCP_Setup/images/vscode_icon.png" alt="Alt text" width="47" />
 
 Before jumping into the tutorial, please create a google cloud account and ensure you have your account activated. --> [Google Cloud](https://cloud.google.com/gcp?utm_source=google&utm_medium=cpc&utm_campaign=emea-de-all-de-bkws-all-all-trial-e-gcp-1707574&utm_content=text-ad-none-any-DEV_c-CRE_529379242747-ADGP_Hybrid+%7C+BKWS+-+EXA+%7C+Txt+-+GCP+-+General+-+v3-KWID_43700060393213364-kwd-6458750523-userloc_9041832&utm_term=KW_google+cloud-NET_g-PLAC_&&gad_source=1&gclid=CjwKCAjwn6LABhBSEiwAsNJrjlYSo93y2CTKff3jPC5ziNHK9MhgLO_wpLofE4KhPkvL1YUG7z-UexoC1hkQAvD_BwE&gclsrc=aw.ds&hl=en)
 
@@ -18,7 +18,7 @@ You should also install [VSCode](https://code.visualstudio.com/).
 After creating your google cloud platform account, you can now jump into the first step which is creating your first project. For this, simply click on the following box and choose an existing project or create a new one:
 
 
-<img src="tutorial/projects.png" alt="Alt text" width="300" />
+<img src="GCP_Setup/images/projects.png" alt="Alt text" width="300" />
 
 ---
 ## **Step 2: Enabling GCP Compute Engine API**
@@ -52,7 +52,7 @@ To confirm the proper installation of the drivers and CUDA, run the following co
 
 **You should receive the following output:**
 
-<img src="tutorial/verification_step_1.png" alt="Alt text" width="600" />
+<img src="GCP_Setup/images/verification_step_1.png" alt="Alt text" width="600" />
 
 ---
 #### Verification of the CUDA Version
@@ -62,7 +62,7 @@ To confirm the proper installation of the drivers and CUDA, run the following co
 
 **You should receive the following output:**
 
-<img src="tutorial/verification_step_2.png" alt="Alt text" width="600" />
+<img src="GCP_Setup/images/verification_step_2.png" alt="Alt text" width="600" />
 
 ---
 ## **Step 6: Connecting to the instance from the local machine**
@@ -155,23 +155,23 @@ code ~/.ssh/known_hosts
 
 **6.3.1: Open VSCode and click the blue >< sign**
 
-<img src="tutorial/vscode_oconnect_new_remote_host.png" alt="Alt text" width="150" />
+<img src="GCP_Setup/images/vscode_oconnect_new_remote_host.png" alt="Alt text" width="150" />
 
 **then click the following**
 
-<img src="tutorial/vscode_connect_host_ssh.png" alt="Alt text" width="500" />
+<img src="GCP_Setup/images/vscode_connect_host_ssh.png" alt="Alt text" width="500" />
 
 **insert the host ip address and click enter or select it from existing ones (verify if correct)**
 
-<img src="tutorial/vscode_select_host_ip.png" alt="Alt text" width="500" />
+<img src="GCP_Setup/images/vscode_select_host_ip.png" alt="Alt text" width="500" />
 
 **verify IP and click continue**
 
-<img src="tutorial/vscode_1_open_connection.png" alt="Alt text" width="500" />
+<img src="GCP_Setup/images/vscode_1_open_connection.png" alt="Alt text" width="500" />
 
 **check if verification was successful**
 
-<img src="tutorial/connection_successful.png" alt="Alt text" width="150" />
+<img src="GCP_Setup/images/connection_successful.png" alt="Alt text" width="150" />
 
 **6.3.2: create new .ssh key pair on remote host**
 
