@@ -32,7 +32,7 @@ def load_datasets(train_dir="assets/data/dataset2-master/dataset2-master/images/
         Preprocessed test dataset.
     """
     # Load training dataset
-    train_ds = tf.keras.utils.image_dataset_from_directory(
+    raw_train_ds = tf.keras.utils.image_dataset_from_directory(
         train_dir,
         validation_split=0.2,
         subset="training",
@@ -42,8 +42,10 @@ def load_datasets(train_dir="assets/data/dataset2-master/dataset2-master/images/
         label_mode='int'
     )
 
+    class_names = raw_train_ds.class_names  # ✅ Capture before transformation
+
     # Load validation dataset
-    val_ds = tf.keras.utils.image_dataset_from_directory(
+    raw_val_ds = tf.keras.utils.image_dataset_from_directory(
         train_dir,
         validation_split=0.2,
         subset="validation",
@@ -54,22 +56,24 @@ def load_datasets(train_dir="assets/data/dataset2-master/dataset2-master/images/
     )
 
     # Load test dataset
-    test_ds = tf.keras.utils.image_dataset_from_directory(
+    raw_test_ds = tf.keras.utils.image_dataset_from_directory(
         test_dir,
         image_size=(img_height, img_width),
         batch_size=batch_size,
         label_mode='int'
     )
 
+    AUTOTUNE = tf.data.AUTOTUNE
+
     # Performance boost: cache, shuffle (for training), and prefetch
-    train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
-    val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
-    test_ds = test_ds.cache().prefetch(buffer_size=AUTOTUNE)
+    train_ds = raw_train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
+    val_ds = raw_val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+    test_ds = raw_test_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
-    return train_ds, val_ds, test_ds
+    return train_ds, val_ds, test_ds, class_names
 
 
-def plot_dataset_distributions(train_ds, val_ds, test_ds, img_height, img_width):
+def plot_dataset_distributions(train_ds, val_ds, test_ds, img_height, img_width, class_names, save_dir=None):
     """
     Plots the class distributions of the training, validation, and test datasets.
 
@@ -86,8 +90,9 @@ def plot_dataset_distributions(train_ds, val_ds, test_ds, img_height, img_width)
     img_width : int
         Image width (not used here, but passed for consistency/future use).
     """
-    train_dist = eda.get_class_distribution(train_ds)
-    val_dist = eda.get_class_distribution(val_ds)
-    test_dist = eda.get_class_distribution(test_ds)
+    train_dist = eda.get_class_distribution(train_ds, class_names)
+    val_dist = eda.get_class_distribution(val_ds, class_names)
+    test_dist = eda.get_class_distribution(test_ds, class_names)
 
-    eda.plot_class_distribution(train_dist, val_dist, test_dist, dataset_names=["Train", "Validation", "Test"])
+    eda.plot_distribution(distributions=[train_dist, val_dist, test_dist], 
+                          dataset_names=["Train", "Validation", "Test"])

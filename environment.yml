@@ -1,18 +1,26 @@
-name: bloodcell-streamlit
+name: image_classification
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 dependencies:
-  - python=3.12
+  - python=3.10
   - pip
+  - pandas
+  - numpy<2.0
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - pillow
+  - jupyterlab
+  - notebook
+  - ipykernel
+  - ipywidgets
+  - scipy
+  - tqdm
   - pip:
-      - streamlit
-      - tensorflow
-      - scikit-learn
-      - matplotlib
-      - seaborn
-      - pandas
-      - numpy
-      - pillow
-      - optuna
+      - tensorflow==2.14.0
+      - opencv-python
+      - requests
       - plotly
+      - optuna
+      - streamlit

@@ -8,7 +8,7 @@ import os
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-def get_class_distribution(dataset):
+def get_class_distribution(dataset, class_names=None):
 
   """
   Analyzes the distribution of classes within a dataset to understand class imbalance.
@@ -21,7 +21,7 @@ def get_class_distribution(dataset):
   """
 
   # Initialize a dictionary to count occurrences
-  count_dict = {k: 0 for k in range(len(dataset.class_names))}
+  count_dict = {k: 0 for k in range(len(class_names))}
 
   # Iterate over the dataset
   for images, labels in dataset:
@@ -30,7 +30,7 @@ def get_class_distribution(dataset):
           count_dict[key] += count
 
   # Return a dictionary with class names and their counts
-  return {dataset.class_names[k]: v for k, v in count_dict.items()}
+  return {class_names[k]: v for k, v in count_dict.items()}
 
 def plot_distribution(distributions, dataset_names):
 
@@ -69,6 +69,7 @@ def plot_distribution(distributions, dataset_names):
       ax.set_title(f'{name} Dataset')
       ax.set_xlabel('Classes')
       ax.set_ylabel('Counts')
+      ax.set_xticks(range(len(classes)))  # Set fixed tick positions
       ax.set_xticklabels(classes, rotation=45, ha='right')
 
       # Add annotations to each bar

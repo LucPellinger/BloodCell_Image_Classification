@@ -58,7 +58,7 @@ class MulticlassPrecision(tf.keras.metrics.Metric):
     """
 
     for p in self.precision_objects:
-        p.reset_states()
+        p.reset_state()
 
   def get_config(self):
       config = super().get_config()
@@ -123,7 +123,7 @@ class MulticlassRecall(tf.keras.metrics.Metric):
       """
 
       for r in self.recall_objects:
-          r.reset_states()
+          r.reset_state()
 
     def get_config(self):
         config = super().get_config()
