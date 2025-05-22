@@ -1,0 +1,10 @@
+              precision    recall  f1-score   support
+
+  EOSINOPHIL       0.25      0.83      0.39       623
+  LYMPHOCYTE       0.20      0.02      0.03       620
+    MONOCYTE       0.24      0.06      0.10       620
+  NEUTROPHIL       0.28      0.10      0.15       624
+
+    accuracy                           0.25      2487
+   macro avg       0.24      0.25      0.17      2487
+weighted avg       0.24      0.25      0.17      2487

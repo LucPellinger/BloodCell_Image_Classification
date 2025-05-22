@@ -1,16 +1,28 @@
 # Core libraries
-streamlit>=1.28
 pandas
 numpy
 scikit-learn
 matplotlib
 seaborn
-plotly
 pillow
 
-# Jupyter (optional for notebook debugging)
-jupyter
+
+# === Jupyter and Extensions ===
+jupyterlab
+notebook
 ipykernel
+ipywidgets
+jupyter_contrib_nbextensions
 
 # Inference-related
-tensorflow  # or torch, depending on your model
+tensorflow
+
+# === Optional / Helpful Extras ===
+opencv-python
+tqdm
+scipy
+requests
+plotly
+optuna
+streamlit
+gradio
