@@ -24,3 +24,4 @@ requests
 plotly
 optuna
 streamlit
+gradio

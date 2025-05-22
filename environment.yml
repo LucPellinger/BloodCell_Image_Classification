@@ -24,3 +24,5 @@ dependencies:
       - plotly
       - optuna
       - streamlit
+      - optuna-integration
+      - gradio

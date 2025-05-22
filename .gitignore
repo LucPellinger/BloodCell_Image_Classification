@@ -186,3 +186,4 @@ cython_debug/
 *.onnx
 *.ckpt
 **/assets/tf_logs
+**/assets/tf_logs_optuna
