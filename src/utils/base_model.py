@@ -17,11 +17,13 @@ from utils.metrics import MulticlassPrecision, MulticlassRecall
 from utils.train_utils import get_callbacks, performance_plot
 from utils.evaluation import performance_Metrics_U_Visualizations
 
+from app.components.path_utils import get_project_root
+
 
 class BaseModel:
     def __init__(self, model_name, num_classes, input_shape):
         self.model_name = model_name
-        self.save_dir_base = "assets/models"
+        self.save_dir_base = os.path.join(get_project_root(), "assets", "models")
         self.save_dir = os.path.join(self.save_dir_base, self.model_name)
 
         # Setup model-specific logger

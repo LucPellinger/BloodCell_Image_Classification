@@ -6,9 +6,9 @@ import os
 # Add project root to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from utils.preprocessing import load_datasets, plot_dataset_distributions
+from utils.preprocessing import load_datasets
 from utils.base_model import BenchmarkKaggleModel
-from utils.eda import display_class_representatives #checked
+from utils.eda import display_class_representatives_plt, plot_dataset_distributions
 
 # /opt/conda/envs/image_classification
 
@@ -56,7 +56,7 @@ logger.info("Class names: %s", class_names)
 plot_dataset_distributions(train_ds, val_ds, test_ds, img_height=IMG_HEIGHT, img_width=IMG_WIDTH, class_names=class_names)
 
 logger.info("🖼️ Displaying representative images...")
-display_class_representatives(TRAIN_DIR, IMG_HEIGHT, IMG_WIDTH)
+display_class_representatives_plt(TRAIN_DIR, IMG_HEIGHT, IMG_WIDTH)
 
 # === STEP 3: Build Model === #
 logger.info("🧠 Initializing baseline CNN model...")

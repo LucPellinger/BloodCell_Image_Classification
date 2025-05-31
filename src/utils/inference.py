@@ -5,16 +5,22 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 import os
+
+from app.components.path_utils import get_project_root
+from utils.preprocessing import get_image_config
+
 #import streamlit as st
 
 # Constants
-IMG_SIZE = (224, 224)
-NUM_CHANNELS = 3
-CLASS_NAMES = ["Eosinophil", "Lymphocyte", "Monocyte", "Neutrophil"]
+IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, CLASS_NAMES = get_image_config()
+IMG_SIZE = (IMG_HEIGHT, IMG_WIDTH)  #  (240, 320)
+NUM_CHANNELS = IMG_CHANNELS # 3
+CLASS_NAMES = CLASS_NAMES # ["Eosinophil", "Lymphocyte", "Monocyte", "Neutrophil"]
 
 #@st.cache_resource
-def load_model(model_path: str):
+def load_model(model_name: str):
     """Load a Keras model from file, cached for performance"""
+    model_path = os.path.join(get_project_root(), "assets", "models", model_name)
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found: {model_path}")
     return tf.keras.models.load_model(model_path)

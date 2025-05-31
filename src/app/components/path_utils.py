@@ -1,3 +1,5 @@
+#app/components/path_utils.py
+
 import os
 
 def get_project_root():

@@ -15,11 +15,13 @@ from optuna.pruners import MedianPruner
 import tensorflow as tf
 
 from utils.train_utils import performance_plot
+from app.components.path_utils import get_project_root
+
 
 class BayesianOptimizer:
     def __init__(self, model_class):
         self.model_class = model_class
-        self.db_path = db_path = "sqlite:///" + os.path.abspath("assets/optuna_study.db")
+        self.db_path = "sqlite:///" + os.path.abspath(os.path.join(get_project_root(), "assets", "optuna_study.db"))
         self.study = None
 
     def _objective(self, trial, **kwargs):
@@ -49,7 +51,7 @@ class BayesianOptimizer:
         )
 
         trial_log_dir = os.path.join(
-            "assets/tf_logs_optuna",                 # base log dir
+            get_project_root(), "assets", "tf_logs_optuna",  # base log dir
             kwargs['model_name'],                    # e.g., VGG16
             f"trial_{trial.number}"                  # trial ID
         )

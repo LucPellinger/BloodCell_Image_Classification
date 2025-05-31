@@ -1,3 +1,5 @@
+#app/pages/dataset_overview.py
+
 import gradio as gr
 import sys
 import os
@@ -5,10 +7,12 @@ import os
 # Adds the parent of the current script's folder to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from components.shared import app_header, page_title
-from utils.preprocessing import load_datasets, plot_dataset_distributions
-from utils.eda import display_class_representatives
-from components.logger import get_logger
+from components.shared import app_header, page_title, markdown_header
+from utils.preprocessing import load_datasets
+from utils.eda import display_class_representatives_go, plot_dataset_distributions
+from app.components.logger import get_logger
+from app.components.path_utils import get_project_root
+
 logger = get_logger("dataset_page")
 
 # Global cache for dataset (lazy load)
@@ -36,39 +40,72 @@ def safe_load_datasets():
     return _cached_data["train_ds"], _cached_data["val_ds"], _cached_data["test_ds"], _cached_data["class_names"]
 
 def dataset_overview():
-    with gr.Blocks() as demo:
-        app_header()
-        page_title("📊 Dataset Overview")
+    header_path = os.path.join(os.path.dirname(__file__), "..", "components", "markdown", "header_dataset.md")
+
+    with gr.Column() as layout:
+        markdown_header(header_path)
+        #page_title("📊 Dataset Overview")
 
         with gr.Row():
             btn_plot_dist = gr.Button("📈 Show Class Distribution")
             btn_show_samples = gr.Button("🖼️ Show Class Examples")
 
-        output_plot = gr.Plot()
-        output_gallery = gr.HTML()
+        with gr.Column() as output_area:
+            output_plot = gr.Plot(visible=False)
+            output_gallery = gr.Gallery(label="Class Examples", visible=False, columns=4, height="auto")
 
         def plot_distributions_wrapper():
             try:
                 logger.info("Plotting class distributions")
                 train_ds, val_ds, test_ds, class_names = safe_load_datasets()
-                plot_dataset_distributions(train_ds, val_ds, test_ds, 240, 320, class_names)
-                return gr.Plot.update(), ""  # dummy return; matplotlib shows externally
+                fig = plot_dataset_distributions(train_ds, val_ds, test_ds, 240, 320, class_names)
+                return gr.Plot(value=fig, visible=True), gr.Gallery(visible=False)
             except Exception as e:
                 logger.exception("Failed to plot distributions")
-                return gr.Plot.update(), f"❌ Error plotting distributions: {e}"
+                return gr.Plot(), f"❌ Error plotting distributions: {e}"
 
         def show_samples_wrapper():
             try:
-                display_class_representatives(
-                    data_dir="assets/data/dataset2-master/dataset2-master/images/TRAIN",
-                    img_height=100,
-                    img_width=100
+                data_path = os.path.join(
+                    get_project_root(), "assets", "data", "dataset2-master", "dataset2-master", "images", "TRAIN"
                 )
-                return ""
+
+                class_folders = sorted([
+                    f for f in os.listdir(data_path)
+                    if os.path.isdir(os.path.join(data_path, f))
+                ])
+
+                results = []
+                for folder in class_folders:
+                    folder_path = os.path.join(data_path, folder)
+                    image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                    if not image_files:
+                        continue
+                    img_path = os.path.join(folder_path, image_files[0])
+                    results.append((img_path, folder))
+
+                return gr.Plot(visible=False), gr.Gallery(value=results, visible=True)
+
             except Exception as e:
-                return f"❌ Error displaying class examples: {e}"
+                logger.exception("Failed to show class samples")
+                return gr.Plot(visible=False), gr.Gallery(visible=False)
 
-        btn_plot_dist.click(fn=plot_distributions_wrapper, outputs=[output_plot, output_gallery])
-        btn_show_samples.click(fn=show_samples_wrapper, outputs=output_gallery)
+#        def show_samples_wrapper():
+#            try:
+#                data_path = os.path.join(
+#                    get_project_root(), "assets", "data", "dataset2-master", "dataset2-master", "images", "TRAIN"
+#                )
+#                fig = display_class_representatives_go(
+#                    data_dir=data_path,
+#                    img_height=100,
+#                    img_width=100
+#                )
+#                return fig
+#            except Exception as e:
+#                logger.exception("Failed to show class samples")
+#                return None
 
-    return demo
+    btn_plot_dist.click(fn=plot_distributions_wrapper, outputs=[output_plot, output_gallery])
+    btn_show_samples.click(fn=show_samples_wrapper, outputs=[output_plot, output_gallery])
+
+    return layout

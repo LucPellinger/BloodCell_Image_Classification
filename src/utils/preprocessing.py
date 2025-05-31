@@ -5,20 +5,28 @@ from app.components.logger import get_logger  # ← NEW
 logger = get_logger("preprocessing")
 # Add project root to PYTHONPATH
 import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#import sys
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from utils import eda  # Make sure `utils/__init__.py` exists
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers import RandomFlip, RandomRotation, RandomContrast, RandomBrightness, RandomTranslation
 
+from app.components.path_utils import get_project_root
+
 AUTOTUNE = tf.data.AUTOTUNE
 
-def load_datasets(train_dir="src/assets/data/dataset2-master/dataset2-master/images/TRAIN", 
-                  test_dir="src/assets/data/dataset2-master/dataset2-master/images/TEST", 
-                  img_height=240, img_width=320, batch_size=32):
+def get_image_config():
+    IMG_HEIGHT = 240
+    IMG_WIDTH = 320
+    IMG_CHANNELS = 3
+    CLASS_NAMES = ["Eosinophil", "Lymphocyte", "Monocyte", "Neutrophil"]
+    return IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS, CLASS_NAMES
+
+def load_datasets(train_dir=os.path.join(get_project_root(), "assets", "data", "dataset2-master", "dataset2-master", "images", "TRAIN"),
+                test_dir=os.path.join(get_project_root(), "assets", "data", "dataset2-master", "dataset2-master", "images", "TEST"),
+                img_height=240, img_width=320, batch_size=32):
     """
     Load and preprocess image datasets for training, validation, and testing.
 
@@ -90,43 +98,6 @@ def load_datasets(train_dir="src/assets/data/dataset2-master/dataset2-master/ima
     except Exception as e:
         logger.exception("❌ Failed to load datasets.")
         raise RuntimeError(f"Failed to load datasets: {e}")
-
-
-def plot_dataset_distributions(train_ds, val_ds, test_ds, img_height, img_width, class_names, save_dir=None, mode=None):
-    """
-    Plots the class distributions of the training, validation, and test datasets.
-
-    Parameters:
-    ----------
-    train_ds : tf.data.Dataset
-        The training dataset.
-    val_ds : tf.data.Dataset
-        The validation dataset.
-    test_ds : tf.data.Dataset
-        The test dataset.
-    img_height : int
-        Image height (not used here, but passed for consistency/future use).
-    img_width : int
-        Image width (not used here, but passed for consistency/future use).
-    """
-    logger.info("📊 Plotting dataset class distributions...")
-    try:
-        train_dist = eda.get_class_distribution(train_ds, class_names)
-        val_dist = eda.get_class_distribution(val_ds, class_names)
-        test_dist = eda.get_class_distribution(test_ds, class_names)
-
-        if mode == None:
-            eda.plot_distribution(distributions=[train_dist, val_dist, test_dist], 
-                              dataset_names=["Train", "Validation", "Test"])
-        logger.info("✅ Dataset distributions plotted.")
-    except Exception as e:
-        logger.exception("❌ Error while plotting distributions.")
-        raise RuntimeError(f"Failed to plot class distributions: {e}")
-
-    #elif mode == "st" or "streamlit":
-    #    eda.plot_distribution_streamlit(distributions=[train_dist, val_dist, test_dist], 
-    #                      dataset_names=["Train", "Validation", "Test"])
-
 
 def get_augmentation_layer(img_height, img_width):
     return keras.Sequential([

@@ -10,7 +10,8 @@ from pathlib import Path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils.streamlit_app_utils.layout_utils import render_logo
-from utils.preprocessing import load_datasets, plot_dataset_distributions
+from utils.preprocessing import load_datasets
+from utils.eda import plot_dataset_distributions
 #from utils.eda import plot_distribution_streamlit, display_class_representatives_streamlit #checked
 
 st.set_page_config(page_title="🧬 Image Dataset – Blood Cell Image Classification", layout="wide")

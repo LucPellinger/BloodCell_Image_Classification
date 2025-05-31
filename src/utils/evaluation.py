@@ -9,11 +9,18 @@ from sklearn.metrics import (
 )
 import os
 
+from app.components.path_utils import get_project_root
+
+
 # =============================
 # Final Evaluation
 # =============================
 
-def performance_Metrics_U_Visualizations(model, test_ds, class_names, save_dir="assets/eval_results", logger=None):
+def performance_Metrics_U_Visualizations(model, 
+                                        test_ds, 
+                                        class_names, 
+                                        save_dir = os.path.join(get_project_root(), "assets", "eval_results"),
+                                        logger=None):
 
     y_true, y_pred, y_scores = [], [], []
 
@@ -30,6 +37,7 @@ def performance_Metrics_U_Visualizations(model, test_ds, class_names, save_dir="
     # === 1. Save Classification Report ===
     report = classification_report(y_true, y_pred, target_names=class_names)
     logger.info("Classification Report:\n%s", report)
+    os.makedirs(save_dir, exist_ok=True)
     with open(os.path.join(save_dir, "classification_report.txt"), "w") as f:
         f.write(report)
     logger.info(f"✅ classification report created.")
