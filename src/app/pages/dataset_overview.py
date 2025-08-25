@@ -108,4 +108,13 @@ def dataset_overview():
     btn_plot_dist.click(fn=plot_distributions_wrapper, outputs=[output_plot, output_gallery])
     btn_show_samples.click(fn=show_samples_wrapper, outputs=[output_plot, output_gallery])
 
+    gr.Markdown("""
+                ### Data Preprocessing
+
+                The dataset consists of high-resolution blood cell images organized into separate directories for **training** and **testing**.  
+                Within the training set, images are further split into **train** and **validation** subsets. This allows models to learn from one portion of the data while tuning hyperparameters on another, improving generalization.  
+
+                The **test set** remained untouched until the final evaluation, ensuring results are based on completely unseen data and preventing data leakage. This setup provides a fair and reliable measure of model performance.
+                """)
+
     return layout

@@ -3,6 +3,7 @@
 import gradio as gr
 from pages.home import home_page
 from pages.dataset_overview import dataset_overview
+from pages.models_overview import models_overview
 from components.custom_css import custom_css
 import os
 
@@ -43,6 +44,9 @@ def launch_app():
             with gr.TabItem("Dataset Overview"):
                 dataset_overview()
 
+            with gr.TabItem("Models Overview"):
+                models_overview()   # NEW
+
             # Future:
             # with gr.TabItem("📈 Model Training"):
             #     ...
@@ -53,7 +57,8 @@ def launch_app():
 
     app.launch(show_error=True, 
                allowed_paths=[
-                    "/home/lucpellinger/projects/BloodCell_Image_Classification/src/assets/data"
+                    "/home/lucpellinger/projects/BloodCell_Image_Classification/src/assets/data",
+                    "/home/lucpellinger/projects/BloodCell_Image_Classification/src/assets/models"
                ])
 
 if __name__ == "__main__":
