@@ -15,49 +15,86 @@ from optuna.pruners import MedianPruner
 import tensorflow as tf
 
 from utils.train_utils import performance_plot
+from app.components.path_utils import get_project_root
+from .train_utils import SafePruningCallback
+
 
 class BayesianOptimizer:
     def __init__(self, model_class):
         self.model_class = model_class
-        self.db_path = db_path = "sqlite:///" + os.path.abspath("assets/optuna_study.db")
+        self.db_path = "sqlite:///" + os.path.abspath(os.path.join(get_project_root(), "assets", "optuna_study.db"))
         self.study = None
+        self.strategy = tf.distribute.OneDeviceStrategy(device="/GPU:0")
 
     def _objective(self, trial, **kwargs):
+
+        # =================Old Search space redefinition=================
+
         # Suggest hyperparameters
-        learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2, log=True)
-        num_dense_layers = trial.suggest_int('num_dense_layers', 1, 2)
-        neurons_dense = trial.suggest_int('neurons_dense', 128, 256)
-        dropout_rate = trial.suggest_categorical('dropout_rate', [0.5, None])
-        normalization = trial.suggest_categorical('normalization', [True, False])
-        l2_reg = trial.suggest_float('l2_reg', 1e-5, 1e-2, log=True)
+        # learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2, log=True)
+        # num_dense_layers = trial.suggest_int('num_dense_layers', 1, 2)
+        # neurons_dense = trial.suggest_int('neurons_dense', 128, 256)
+        # dropout_rate = trial.suggest_categorical('dropout_rate', [0.5, None])
+        # normalization = trial.suggest_categorical('normalization', [True, False])
+        # l2_reg = trial.suggest_float('l2_reg', 1e-5, 1e-2, log=True)
+        # with_augmentation = trial.suggest_categorical('augmentation', [True, False])
 
+        # =================Search space redefinition=================
+
+        # === Replace your current suggests with this ===
+        # LR: still log-scaled, but allow slightly higher for head-only training.
+        learning_rate = trial.suggest_float("learning_rate", 5e-6, 5e-2, log=True)
+
+        # Head depth: allow 0 (just a linear classifier after GAP), which is often best with ResNet backbones.
+        num_dense_layers = trial.suggest_int("num_dense_layers", 0, 2)
+
+        # Width: broaden; ResNet features are strong, a bigger head can help on hard datasets.
+        neurons_dense = trial.suggest_int("neurons_dense", 128, 1024, step=64)
+
+        # Dropout: use numeric values (0.0 means “no dropout”) instead of None for simpler code paths.
+        dropout_rate = trial.suggest_categorical("dropout_rate", [0.0, 0.2, 0.4, 0.6])
+
+        # Normalization in the head (keep your switch).
+        normalization = trial.suggest_categorical("normalization", [True, False])
+
+        # L2/weight decay: keep log scale, slightly narrower to where it usually helps.
+        l2_reg = trial.suggest_float("l2_reg", 1e-6, 1e-3, log=True)
+
+        # Data augmentation: keep your flag for now.
+        with_augmentation = trial.suggest_categorical("augmentation", [True, False])
+
+
+        # =================Model initialization and training=================
         # Initialize model
-        model = self.model_class(
-            model_name=kwargs['model_name'],
-            num_classes=kwargs['num_classes'],
-            input_shape=(kwargs['img_height'], kwargs['img_width'], kwargs['num_channels'])
-        )
+        with self.strategy.scope():
+            model = self.model_class(
+                model_name=kwargs['model_name'],
+                num_classes=kwargs['num_classes'],
+                input_shape=(kwargs['img_height'], kwargs['img_width'], kwargs['num_channels'])
+            )
 
-        model.build_pretrained(
-            base_model_name=kwargs['model_name'],
-            num_dense_layers=num_dense_layers,
-            neurons_dense=neurons_dense,
-            dropout_rate=dropout_rate,
-            normalization=normalization,
-            l2_reg=l2_reg,
-            augmentation=True
-        )
+            model.build_pretrained(
+                base_model_name=kwargs['model_name'],
+                num_dense_layers=num_dense_layers,
+                neurons_dense=neurons_dense,
+                dropout_rate=dropout_rate,
+                normalization=normalization,
+                l2_reg=l2_reg,
+                augmentation=with_augmentation
+            )
 
-        trial_log_dir = os.path.join(
-            "assets/tf_logs_optuna",                 # base log dir
-            kwargs['model_name'],                    # e.g., VGG16
-            f"trial_{trial.number}"                  # trial ID
-        )
-        os.makedirs(trial_log_dir, exist_ok=True)
+            trial_log_dir = os.path.join(
+                get_project_root(), "assets", "tf_logs_optuna",  # base log dir
+                kwargs['model_name'],                    # e.g., VGG16
+                f"trial_{trial.number}"                  # trial ID
+            )
+            os.makedirs(trial_log_dir, exist_ok=True)
 
-        pruning_callback = TFKerasPruningCallback(trial, 'val_accuracy')
+            #pruning_callback = TFKerasPruningCallback(trial, 'val_accuracy')
+            pruning_callback = SafePruningCallback(trial, monitor="val_accuracy")
 
-        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
+            model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate), steps_per_execution=32)
+
         model.train(
             train_ds=kwargs['train_ds'],
             val_ds=kwargs['val_ds'],
@@ -77,7 +114,8 @@ class BayesianOptimizer:
             direction='maximize',
             storage=self.db_path,
             load_if_exists=True,
-            pruner=MedianPruner(n_startup_trials=5, n_warmup_steps=0)
+            pruner=MedianPruner(n_startup_trials=5, n_warmup_steps=0),
+            sampler=optuna.samplers.TPESampler()
         )
 
         self.study.optimize(

@@ -6,9 +6,9 @@ import datetime
 # Add project root to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from utils.preprocessing import load_datasets, plot_dataset_distributions
+from utils.preprocessing import load_datasets
 from utils.base_model import BaseModel  # <-- Use BaseModel for transfer learning
-from utils.eda import display_class_representatives
+from utils.eda import display_class_representatives_plt, plot_dataset_distributions
 
 # === SETUP LOGGING === #
 logging.basicConfig(
@@ -115,7 +115,7 @@ for i in models:
     logger.info("🔍 Plotting class distributions...")
     plot_dataset_distributions(train_ds, val_ds, test_ds, IMG_HEIGHT, IMG_WIDTH, class_names)
     logger.info("🖼️ Displaying representative images...")
-    display_class_representatives(TRAIN_DIR, IMG_HEIGHT, IMG_WIDTH)
+    display_class_representatives_plt(TRAIN_DIR, IMG_HEIGHT, IMG_WIDTH)
 
     # === STEP 3: Build Transfer Model === #
     logger.info("🧠 Building transfer learning model...")

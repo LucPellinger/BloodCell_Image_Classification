@@ -1,0 +1,15 @@
+import sys, tensorflow as tf, numpy
+print("Python:", sys.version)
+print("TF:", tf.__version__)
+print("NumPy:", numpy.__version__)
+print("GPUs:", tf.config.list_physical_devices("GPU"))
+print()
+print()
+print()
+print()
+print()
+print("TF:", tf.__version__)
+print("GPUs:", tf.config.list_physical_devices("GPU"))
+for g in tf.config.list_physical_devices("GPU"):
+    tf.config.experimental.set_memory_growth(g, True)
+print("Memory growth set.")
