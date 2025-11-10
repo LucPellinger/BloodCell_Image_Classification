@@ -3,7 +3,9 @@
 ## Demo
 
 ```<demo gif here>```
-
+<center>
+<img src="src/assets/Blood_Cell_Image_Classification_Project.gif" alt="Blood Cell Classification Experiment Explorer" width="1200" align="center"/>
+</center>
 
 ## 🧠 About the Project
 
