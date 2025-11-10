@@ -1,5 +1,10 @@
 # 🩸 BloodCell AI
 
+## Demo
+
+```<demo gif here>```
+
+
 ## 🧠 About the Project
 
 This project was developed as part of a university **Machine Learning** course, where we were challenged to design and implement a **deep learning model** for a meaningful, real-world problem. Our team chose to tackle the automation of **blood cell classification**—an important task in medical diagnostics.
@@ -101,5 +106,75 @@ We plan to make BloodCell AI more accessible by:
 - `app/` – Folder for storing the scripts for the Streamlit app.
 - `assets/` – Assets folder with models, training data as pickle files, images for the app and the data used to train the models.
 - `utils/` - Folder with all the pure python scripts for the backend and modeling.
-- `main.py` - script to start the streamlit app.
+- `main*.py` - scripts to start the streamlit app or respective TensorFlow training pipelines.
 - `README.md` – You’re reading it!
+
+## How to get started
+
+1. Clone the repository:
+   ```bash
+   git clone <repository_url>
+   ```
+
+2. Navigate to the project directory:
+   ```bash
+   cd BloodCellAI
+   ```
+
+3. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## How to run the Gradio App
+
+1. To run the Streamlit app:
+   ```bash
+   python3 run src/app/app_launcher.py
+   ```
+
+## How to Train the Models
+
+### A. Running it via the bash script:
+
+1. Adjust file parameter in line ```6``` of the `run.sh` script to set the desired python script:
+   ```bash
+   python3 src/main_*.py # adjust the * to desired script name
+   ```
+
+2. Make the bash script executable:
+   ```bash
+   chmod +x run.sh
+   ```
+
+3. Run the bash script to train all models sequentially:
+   ```bash
+   ./run.sh
+   ```
+
+
+### B. Running individual training scripts directly:
+1. Training the Baseline CNN:
+   ```bash
+   python3 src/main_baseline.py
+   ```
+
+2. Training the Benchmark CNN:
+   ```bash
+   python3 src/main_benchmark.py
+   ```
+
+3. Training Pre-Trained Models with Transfer Learning:
+   ```bash
+   python3 src/main_pretrained.py
+   ```
+
+4. Hyperparameter Optimization with Optuna:
+   ```bash
+   python3 src/main_optimization.py
+   ```
+
+5. List available models and their performance in the `assets/models/` directory.
+   ```bash
+   python3 src/list_models.py
+   ```

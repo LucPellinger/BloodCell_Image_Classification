@@ -23,6 +23,9 @@ import os
 theme = gr.themes.Monochrome(
     primary_hue="purple",
     secondary_hue="purple",
+    # making app light mode by default
+    light_bg_fill="#FFFFFF",
+    dark_bg_fill="#1E1E1E",
 )
 
 # =========== Launching the App ===========

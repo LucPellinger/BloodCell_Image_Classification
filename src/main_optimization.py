@@ -25,6 +25,12 @@ logger = logging.getLogger(__name__)
 import tensorflow as tf
 import gc
 from tensorflow.keras import backend as K
+
+# added for mixed precision
+from tensorflow.keras import mixed_precision
+mixed_precision.set_global_policy("mixed_float16")
+
+# old from here
 import psutil
 import subprocess
 
@@ -68,21 +74,21 @@ IMG_HEIGHT = 240
 IMG_WIDTH = 320
 NUM_CHANNELS = 3
 NUM_CLASSES = 4
-BATCH_SIZE = 32
-EPOCHS = 10
-TRIALS = 30
+BATCH_SIZE = 64
+EPOCHS = 12
+TRIALS = 100
 CLASS_NAMES = ["Eosinophil", "Lymphocyte", "Monocyte", "Neutrophil"]
 TRAIN_DIR = "assets/data/dataset2-master/dataset2-master/images/TRAIN"
 TEST_DIR = "assets/data/dataset2-master/dataset2-master/images/TEST"
 
 models = [
-    "VGG16", 
+    #"VGG16", 
     #"VGG19", 
     #"EfficientNetB0", 
     #"DenseNet121",
     #"NASNetMobile", 
     #"MobileNetV2", 
-    #"ResNet101", 
+    "ResNet101", 
     #"ResNet50", 
     #"InceptionV3"
 ]

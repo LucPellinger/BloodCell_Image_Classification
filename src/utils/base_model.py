@@ -160,13 +160,15 @@ class BaseModel:
 
         # self.model = Sequential(model_layers)
                 # Final classification layer
-        outputs = layers.Dense(self.num_classes, activation='softmax')(x)
+
+        #outputs = layers.Dense(self.num_classes, activation='softmax')(x)
+        outputs = layers.Dense(self.num_classes, activation='softmax', dtype='float32')(x)
 
         self.model = models.Model(inputs=inputs, outputs=outputs)
         self.logger.info("✅ Model built successfully")
         self.log_gpu_usage()
 
-    def compile(self, optimizer=None, loss='sparse_categorical_crossentropy'):
+    def compile(self, optimizer=None, loss='sparse_categorical_crossentropy', **compile_kwargs):
         if self.model is None:
             raise ValueError("⚠️ Model not built. Call `build()` or `build_pretrained()` first.")
 
@@ -180,7 +182,8 @@ class BaseModel:
                 'accuracy',
                 MulticlassPrecision(num_classes=self.num_classes),
                 MulticlassRecall(num_classes=self.num_classes)
-            ]
+            ],
+            **compile_kwargs,
         )
         self.logger.info("✅ Model compiled")
         self.log_gpu_usage()
@@ -189,7 +192,7 @@ class BaseModel:
         if self.model is None:
             raise ValueError("⚠️ Model not built. Call `build()` or `build_pretrained()` first.")
 
-        callbacks = get_callbacks(tensorboard_logdir)
+        callbacks = get_callbacks(tensorboard_logdir, )
 
         if additional_callbacks:
             callbacks += additional_callbacks
@@ -200,8 +203,8 @@ class BaseModel:
                 ModelCheckpoint(filepath=os.path.join(self.save_dir, f'{self.model_name}.h5'), monitor='val_loss', save_best_only=True, verbose=1)
             ]
 
-        if tensorboard_logdir:
-            tf.profiler.experimental.start(tensorboard_logdir)
+        #if tensorboard_logdir:
+        #    tf.profiler.experimental.start(tensorboard_logdir)
 
         self.history = self.model.fit(
             train_ds,
@@ -211,8 +214,8 @@ class BaseModel:
             #steps_per_epoch=len(train_ds),
         )
 
-        if tensorboard_logdir:
-            tf.profiler.experimental.stop()
+        #if tensorboard_logdir:
+        #    tf.profiler.experimental.stop()
 
 
         self.logger.info("✅ Training complete")

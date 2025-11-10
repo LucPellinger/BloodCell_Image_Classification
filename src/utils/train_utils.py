@@ -2,6 +2,7 @@
 
 
 import tensorflow as tf
+import optuna
 #import tensorflow_docs.modeling
 import matplotlib.pyplot as plt
 from utils.metrics import MulticlassPrecision, MulticlassRecall
@@ -68,8 +69,40 @@ def get_callbacks(name):
         A list of TensorFlow Keras callbacks including model checkpointing and early stopping.
     """
 
+    # print("Utilized **get_callbacks**")
+    # return [
+    #   #tfdocs.modeling.EpochDots(),
+    #   #tf.keras.callbacks.TensorBoard(log_dir=name, update_freq="epoch", histogram_freq=1, write_graph=True),
+    #   tf.keras.callbacks.TensorBoard(log_dir=name, profile_batch=0, write_graph=False)
+# 
+    # ]
     print("Utilized **get_callbacks**")
-    return [
-      #tfdocs.modeling.EpochDots(),
-      tf.keras.callbacks.TensorBoard(log_dir=name, update_freq="epoch", histogram_freq=1, write_graph=True),
-    ]
+    cbs = []
+    if name:
+        cbs.append(tf.keras.callbacks.TensorBoard(
+            log_dir=name,
+            profile_batch=0,     # disable profiler -> avoids CUPTI + deepcopy surprises
+            histogram_freq=0,    # lighter & faster
+            write_graph=False
+        ))
+    return cbs
+
+class SafePruningCallback(tf.keras.callbacks.Callback):
+    """Optuna pruning that won't break when Keras deepcopy()'s callbacks."""
+    def __init__(self, trial, monitor="val_accuracy"):
+        super().__init__()
+        self._trial = trial
+        self.monitor = monitor
+
+    # Make deepcopy() / pickling ignore non-picklable fields.
+    def __getstate__(self):
+        return {"monitor": self.monitor, "trial_number": self._trial.number}
+
+    def on_epoch_end(self, epoch, logs=None):
+        value = (logs or {}).get(self.monitor)
+        if value is None:
+            return
+        self._trial.report(float(value), step=epoch)
+        if self._trial.should_prune():
+            # Stop training immediately, signal Optuna to prune.
+            raise optuna.TrialPruned(f"Pruned at epoch {epoch}")
